@@ -1,5 +1,9 @@
 # Taller: Web Scraper + API REST + Supabase + Frontend
 
+* Yuly Dayana Rodríguez Salcedo - 305314
+
+(La evidencias fotográficas se encuentral al final del documento)
+
 Solución end-to-end: un scraper en Python extrae datos de la web, los envía
 a una API en Node.js/Express, que los guarda en Supabase (PostgreSQL); un
 frontend en HTML/JS los consume y los muestra en tarjetas.
@@ -44,7 +48,7 @@ taller-scraper/
    - `Project URL` → lo necesitarás como `SUPABASE_URL`
    SUPABASE_URL= https://mwpnasdfssovcmtezrgq.supabase.co
    - `service_role` key (⚠️ **no** la `anon` key) → `SUPABASE_SERVICE_ROLE_KEY`
-   SUPABASE_SERVICE_ROLE_KEY= eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13cG5hc2Rmc3NvdmNtdGV6cmdxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NTkzMDkxMSwiZXhwIjoyMTAxNTA2OTExfQ.fO7lCAriksXGwG6zyvbP-ttUuQmYoKPzdYDoreAqspo
+   SUPABASE_SERVICE_ROLE_KEY= eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im13cG5hc2Rmc3NvdmNtdGV6cmd...
 
    La `service_role` key tiene permisos totales y **debe quedarse solo en el
    backend**, nunca en el frontend ni en un repositorio público. Por eso el
@@ -193,3 +197,24 @@ constante.
 
 El `.gitignore` ya excluye `node_modules/`, `.env` y archivos de entornos
 virtuales de Python, así que no subirás secretos ni dependencias pesadas.
+
+#Evidencias 
+Capturas de pantalla que muestran el sistema funcionando de extremo a extremo.
+
+### 1. Base de datos en Supabase
+
+Tabla `scraped_items` con los registros insertados por el scraper.
+
+![Evidencia Supabase](./supabase.png)
+
+### 2. Backend / API REST
+
+Backend (`server.js`) corriendo y respondiendo en `http://localhost:3000/api/items`.
+
+![Evidencia API Backend](./apibackend.png)
+
+### 3. Frontend
+
+Dashboard (`index.html`) mostrando los items scrapeados como tarjetas.
+
+![Evidencia Frontend](./frontend.png)
