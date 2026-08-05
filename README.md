@@ -190,17 +190,6 @@ constante.
 - El scraper identifica un `User-Agent` propio y respeta timeouts, en línea
   con buenas prácticas de scraping.
 
-## Cómo subirlo a GitHub
-
-```bash
-cd taller-scraper
-git init
-git add .
-git commit -m "Taller: scraper + API + Supabase + frontend"
-git branch -M main
-git remote add origin https://github.com/TU_USUARIO/TU_REPO.git
-git push -u origin main
-```
 
 El `.gitignore` ya excluye `node_modules/`, `.env` y archivos de entornos
 virtuales de Python, así que no subirás secretos ni dependencias pesadas.
