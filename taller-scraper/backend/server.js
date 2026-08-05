@@ -8,7 +8,7 @@
  *  GET  /api/items   -> devuelve todos los registros, ordenados por
  *                       created_at descendente, para el frontend.
  *
- * Variables de entorno requeridas (ver .env.example):
+ * Variables de entorno requeridas (ver .env):
  *  - SUPABASE_URL
  *  - SUPABASE_SERVICE_ROLE_KEY   (NUNCA exponer esta key al frontend)
  *  - PORT (opcional, default 3000)
