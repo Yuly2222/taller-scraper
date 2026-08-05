@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Panel de Items Scrapeados</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --card-bg: #1a1d27;
+    --border: #2a2e3a;
+    --accent: #ff6b35;
+    --text: #e8e8ec;
+    --text-dim: #8b8fa3;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 2rem 1rem;
+  }
+  .container { max-width: 900px; margin: 0 auto; }
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  h1 { font-size: 1.5rem; margin: 0; }
+  .subtitle { color: var(--text-dim); font-size: 0.9rem; margin-top: 0.25rem; }
+  button#refresh-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  button#refresh-btn:hover { opacity: 0.85; }
+  button#refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  #status { color: var(--text-dim); font-size: 0.85rem; margin-bottom: 1rem; min-height: 1.2em; }
+  #status.error { color: #ff5c5c; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1rem;
+  }
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .card a.title {
+    color: var(--text);
+    font-weight: 600;
+    text-decoration: none;
+    font-size: 1rem;
+    line-height: 1.35;
+  }
+  .card a.title:hover { color: var(--accent); }
+  .card .meta {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    font-size: 0.78rem;
+    color: var(--text-dim);
+  }
+  .card .source-tag {
+    display: inline-block;
+    background: rgba(255,107,53,0.15);
+    color: var(--accent);
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    width: fit-content;
+  }
+  .empty-state, .loading-state {
+    text-align: center;
+    color: var(--text-dim);
+    padding: 3rem 1rem;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>Items Scrapeados</h1>
+        <div class="subtitle">Datos recolectados por el scraper y almacenados en Supabase</div>
+      </div>
+      <button id="refresh-btn">Actualizar</button>
+    </header>
+
+    <div id="status"></div>
+    <div id="content"></div>
+  </div>
+
+<script>
+  // ------------------------------------------------------------------
+  // Configuración: apunta al backend (server.js). Cambia el puerto/host
+  // si tu backend corre en otro lugar.
+  // ------------------------------------------------------------------
+  const API_BASE_URL = "http://localhost:3000";
+
+  const refreshBtn = document.getElementById("refresh-btn");
+  const statusEl = document.getElementById("status");
+  const contentEl = document.getElementById("content");
+
+  function setStatus(message, isError = false) {
+    statusEl.textContent = message;
+    statusEl.classList.toggle("error", isError);
+  }
+
+  function escapeHtml(str) {
+    // Previene inyección de HTML/XSS al renderizar datos que vienen de la API
+    const div = document.createElement("div");
+    div.textContent = str ?? "";
+    return div.innerHTML;
+  }
+
+  function formatDate(isoString) {
+    try {
+      return new Date(isoString).toLocaleString("es-CO", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      });
+    } catch {
+      return isoString;
+    }
+  }
+
+  function renderItems(items) {
+    if (!items || items.length === 0) {
+      contentEl.innerHTML = `<div class="empty-state">Todavía no hay items. Corre el scraper y actualiza.</div>`;
+      return;
+    }
+
+    const cards = items.map((item) => {
+      const meta = item.metadata || {};
+      const metaParts = [];
+      if (meta.points != null) metaParts.push(`${meta.points} pts`);
+      if (meta.author) metaParts.push(`por ${escapeHtml(meta.author)}`);
+      if (meta.comments != null) metaParts.push(`${meta.comments} comentarios`);
+
+      return `
+        <div class="card">
+          ${item.source ? `<span class="source-tag">${escapeHtml(item.source)}</span>` : ""}
+          <a class="title" href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer">
+            ${escapeHtml(item.title)}
+          </a>
+          <div class="meta">
+            ${metaParts.length ? `<span>${metaParts.join(" · ")}</span>` : ""}
+            <span>${formatDate(item.created_at)}</span>
+          </div>
+        </div>
+      `;
+    });
+
+    contentEl.innerHTML = `<div class="grid">${cards.join("")}</div>`;
+  }
+
+  async function loadItems() {
+    refreshBtn.disabled = true;
+    setStatus("Cargando...");
+    contentEl.innerHTML = `<div class="loading-state">Cargando items...</div>`;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/items`);
+
+      if (!response.ok) {
+        throw new Error(`El servidor respondió con estado ${response.status}`);
+      }
+
+      const data = await response.json();
+      renderItems(data.items);
+      setStatus(`Última actualización: ${new Date().toLocaleTimeString("es-CO")} · ${data.items.length} items`);
+    } catch (err) {
+      console.error(err);
+      setStatus(
+        "No se pudo conectar con el backend. Verifica que 'node server.js' esté corriendo en " + API_BASE_URL,
+        true
+      );
+      contentEl.innerHTML = `<div class="empty-state">Error al cargar los datos.</div>`;
+    } finally {
+      refreshBtn.disabled = false;
+    }
+  }
+
+  refreshBtn.addEventListener("click", loadItems);
+
+  // Carga inicial al abrir la página
+  loadItems();
+</script>
+</body>
+</html>
